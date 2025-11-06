@@ -54,17 +54,27 @@ class EPUBReader:
     
     def get_metadata(self):
         """Extract metadata from the EPUB"""
-        # TODO: Open EPUB as ZIP file
-        
-        # TODO: Read META-INF/container.xml to find content.opf location
-        
-        # TODO: Parse content.opf file
-        
-        # TODO: Extract title and author from Dublin Core metadata
-        
-        # TODO: Return metadata dictionary
-        
-        pass
+        with zipfile.ZipFile(self.epub_path, 'r') as epub:
+            # Read container.xml to find content.opf location
+            container = epub.read('META-INF/container.xml')
+            container_root = ET.fromstring(container)
+            opf_path = container_root.find('.//n:rootfile', self.namespaces).get('full-path')
+            
+            # Parse content.opf file
+            opf_content = epub.read(opf_path)
+            opf_root = ET.fromstring(opf_content)
+            
+            # Extract title and author from Dublin Core metadata
+            metadata = {}
+            dc_ns = '{http://purl.org/dc/elements/1.1/}'
+            
+            title = opf_root.find(f'.//{dc_ns}title')
+            metadata['title'] = title.text if title is not None else 'Unknown'
+            
+            creator = opf_root.find(f'.//{dc_ns}creator')
+            metadata['author'] = creator.text if creator is not None else 'Unknown'
+            
+            return metadata
 
 
 def main():
