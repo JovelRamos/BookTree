@@ -40,17 +40,26 @@ class EPUBReader:
     
     def _extract_text(self, html_content):
         """Extract text from HTML/XHTML content"""
-        # TODO: Remove script and style tags
+        # Remove script and style tags
+        html_content = re.sub(r'<script[^>]*>.*?</script>', '', html_content, flags=re.DOTALL | re.IGNORECASE)
+        html_content = re.sub(r'<style[^>]*>.*?</style>', '', html_content, flags=re.DOTALL | re.IGNORECASE)
         
-        # TODO: Remove all HTML tags
+        # Remove all HTML tags
+        text = re.sub(r'<[^>]+>', '', html_content)
         
-        # TODO: Decode HTML entities (&nbsp;, &lt;, &gt;, etc.)
+        # Decode HTML entities
+        text = text.replace('&nbsp;', ' ')
+        text = text.replace('&lt;', '<')
+        text = text.replace('&gt;', '>')
+        text = text.replace('&amp;', '&')
+        text = text.replace('&quot;', '"')
+        text = text.replace('&#39;', "'")
         
-        # TODO: Clean up whitespace
+        # Clean up whitespace
+        text = re.sub(r'\n\s*\n', '\n\n', text)
+        text = re.sub(r' +', ' ', text)
         
-        # TODO: Return cleaned text
-        
-        pass
+        return text.strip()
     
     def get_metadata(self):
         """Extract metadata from the EPUB"""
@@ -78,19 +87,30 @@ class EPUBReader:
 
 
 def main():
-    # TODO: Check command line arguments
+    # Check command line arguments
+    if len(sys.argv) < 2:
+        print("Usage: python epub_reader.py <path_to_epub_file>")
+        sys.exit(1)
     
-    # TODO: Create EPUBReader instance
+    epub_path = sys.argv[1]
     
-    # TODO: Get and display metadata
-    
-    # TODO: Read and display chapters
-    
-    # TODO: Add pause between chapters for user interaction
-    
-    # TODO: Handle errors appropriately
-    
-    pass
+    try:
+        # Create EPUBReader instance
+        reader = EPUBReader(epub_path)
+        
+        # Get and display metadata
+        metadata = reader.get_metadata()
+        print("=" * 60)
+        print(f"Title: {metadata['title']}")
+        print(f"Author: {metadata['author']}")
+        print("=" * 60)
+        
+    except FileNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error reading EPUB: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
